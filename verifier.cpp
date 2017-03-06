@@ -24,30 +24,38 @@ int same(const int a[], int n); // check if all numbers in an array are equal
 void *checkrows(void *param); // passed as parameter to thread creation to check rows
 void *checkcolumns(void *param); // check columns for errors
 void *checksubgrids(void *param); // check sub grids for errors 
-void fillGrid(); // read grid from file 
+void fillGrid(const string& filename); // read grid from file 
 void easyFixes(); // for when there is only 1 error in a single row/column
 void hardFixes(); // for when there are multiple errors in the same row or column
 void checkResults(); // once all threads return, check for errors
 
-int main()
+int main(int argc, char **argv)
 {
-	fillGrid();
-	pthread_t subthreads[3];	// create 3 threads 
-	for (int i = 0;i<3;i++)
+	if(argc < 2)
 	{
-		switch(i)
-		{	// create all threads, one each for checking rows, columns, and subgrids
-			case 0: pthread_create(&subthreads[0], NULL, checkrows, NULL); break;
-			case 1: pthread_create(&subthreads[1], NULL, checkcolumns, NULL); break;
-			case 2: pthread_create(&subthreads[2], NULL, checksubgrids, NULL); break;
-		}
+		cout << "No file provided!" << endl;
 	}
+	else
+	{
+		string filename = argv[1];
+		fillGrid(filename);
+		pthread_t subthreads[3];	// create 3 threads 
+		for (int i = 0;i<3;i++)
+		{
+			switch(i)
+			{	// create all threads, one each for checking rows, columns, and subgrids
+				case 0: pthread_create(&subthreads[0], NULL, checkrows, NULL); break;
+				case 1: pthread_create(&subthreads[1], NULL, checkcolumns, NULL); break;
+				case 2: pthread_create(&subthreads[2], NULL, checksubgrids, NULL); break;
+			}
+		}
 
-	for (int i = 0;i<3;i++)	// wait for threads to finish work
-		pthread_join(subthreads[i],NULL);
+		for (int i = 0;i<3;i++)	// wait for threads to finish work
+			pthread_join(subthreads[i],NULL);
 
-	checkResults(); // check results from threads
-
+		checkResults(); // check results from threads
+	}
+	
 	return 0;
 }
 
@@ -167,7 +175,7 @@ void easyFixes() // there is only 1 error per column or row
 	}
 }
 
-void fillGrid() // read file and insert numbers into 2d array grid
+void fillGrid(const string& filename) // read file and insert numbers into 2d array grid
 {
 	for (int i = 0; i < 9; ++i) 
 	{
@@ -178,7 +186,7 @@ void fillGrid() // read file and insert numbers into 2d array grid
 	int prow = 0;
 	int pcol = 0;
 	int column = 0;
-	ifstream tf("test5.txt");
+	ifstream tf(filename.c_str());
 	if(tf.is_open())
 	{
 		while(getline(tf,line))
@@ -287,7 +295,6 @@ void *checkcolumns(void *param)
 void *checkrows(void *param)
 {
 	//int rowtester[9] = {0,0,0,0,0,0,0,0,0}; 
-
 	for(int i = 0;i<9;i++)
 	{
 		int rowtester[9] = {0,0,0,0,0,0,0,0,0};  // increment array if number found
